@@ -16,6 +16,13 @@
 \ProvidesExplPackage {nlproceedings} {2020/11/19} {0.4.0}
   {Japanese document class for the proceedings of ANLP}
 
+%% 変数宣言
+\int_new:N \l__nlpr_author_int
+\int_new:N \g_nlpr_nof_authors_int
+
+\tl_new:N \g_nlpr_title_tl
+\tl_new:N \l__nlpr_pname_tl
+
 %% メッセージ
 \msg_new:nnn { nlproceedings } { disallowed-option }
   { Option~ '#1'~ is~ disallowed;~ skipping. }
@@ -131,6 +138,104 @@
   itemization_beforeafter_space={0pt,i=.25\baselineskip},
   caption_font={\small},  % キャプション
 }
+
+%% 文書情報
+\NewDocumentCommand { \paperinfo } { m }
+  {
+    \keys_set:nn { nlproceedings / paperinfo } {#1}
+    \__nlpr_set_authors_props:
+    \__nlpr_set_institutes_props:
+    \__nlpr_prepare_maketitle:
+  }
+
+% キー定義
+\clist_new:N \g__nlpr_author_clist
+\clist_new:N \g__nlpr_institute_clist
+\keys_define:nn { nlproceedings / paperinfo }
+  {
+    % タイトル
+    title .tl_gset:N = \g_nlpr_title_tl,
+    title .value_required:n = true,
+
+    % 著者
+    author .clist_gset:N = \g__nlpr_author_clist,
+    author .value_required:n = true,
+
+    % 所属
+    institute .clist_gset:N = \g__nlpr_institute_clist,
+    institute .value_required:n = true,
+  }
+
+% 著者データ
+\cs_new:Nn \__nlpr_set_authors_props:
+  {
+    \int_zero:N \l__nlpr_author_int
+    \clist_map_inline:Nn \g__nlpr_author_clist
+      {
+        \int_incr:N \l__nlpr_author_int
+        \tl_set:Nx \l__nlpr_pname_tl
+          { g__nlpr_author \int_use:N \l__nlpr_author_int _prop }
+        \prop_new:c { \l__nlpr_pname_tl }
+        \prop_gset_from_keyval:cn { \l__nlpr_pname_tl } {##1}
+      }
+    \int_set_eq:NN \g_nlpr_nof_authors_int \l__nlpr_author_int
+  }
+
+% 機関データ
+\cs_new:Nn \__nlpr_set_institutes_props:
+  {
+    % TODO
+  }
+
+% タイトルの構成
+\tl_new:N \l__nlpr_title_authors_tl
+\cs_new:Nn \__nlpr_prepare_maketitle:
+  {
+    % ===== タイトル =====
+    \tl_gset:cx { @title }
+      {
+        {
+          \exp_not:n { \sffamily\gtfamily }
+          \exp_not:o { \g_nlpr_title_tl }
+        }
+      }
+
+    % ===== 著者 =====
+    \tl_clear:N \l__nlpr_title_authors_tl
+
+    % 著者名
+    \int_zero:N \l__nlpr_author_int
+    \int_while_do:nn { \l__nlpr_author_int < \g_nlpr_nof_authors_int }
+      {
+        \int_incr:N \l__nlpr_author_int
+
+        \int_compare:nNnT { \l__nlpr_author_int } > { 1 }
+          { \tl_put_right:Nn \l__nlpr_title_authors_tl { \and } }
+
+        \tl_set:Nx \l__nlpr_pname_tl
+          { g__nlpr_author \int_use:N \l__nlpr_author_int _prop }
+        \prop_get:cnN { \l__nlpr_pname_tl } { name } { \l_tmpa_tl }
+        \tl_put_right:No \l__nlpr_title_authors_tl { \l_tmpa_tl }
+      }
+
+    % メールアドレス
+    \int_zero:N \l__nlpr_author_int
+    \tl_put_right:Nn \l__nlpr_title_authors_tl { \\ }
+    \int_while_do:nn { \l__nlpr_author_int < \g_nlpr_nof_authors_int }
+      {
+        \int_incr:N \l__nlpr_author_int
+
+        \int_compare:nNnT { \l__nlpr_author_int } > { 1 }
+          { \tl_put_right:Nn \l__nlpr_title_authors_tl { \and } }
+
+        \tl_set:Nx \l__nlpr_pname_tl
+          { g__nlpr_author \int_use:N \l__nlpr_author_int _prop }
+        \prop_get:cnN { \l__nlpr_pname_tl } { email } { \l_tmpa_tl }
+        \tl_put_right:Nx \l__nlpr_title_authors_tl
+          { \exp_not:N \texttt { \exp_not:o { \l_tmpa_tl } } }
+      }
+    \tl_gset:co { @author } { \l__nlpr_title_authors_tl }
+  }
 
 % vim: ft=expl3 nospell:
 %% EOF
