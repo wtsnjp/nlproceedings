@@ -81,10 +81,13 @@
     twocolumn,           % 二段組
     fontsize=10pt,       % フォントサイズ
     baselineskip=1.5zh,  % 行送り
-    head_space=3cm,      % 天
-    foot_space=3cm,      % 地
-    gutter=2cm,          % のど
-    fore-edge=2cm,       % 小口
+    line_length=23zw,    % 行長
+    number_of_lines=45,  % 行数
+    % 上記設定は以下の余白設定を満たすように算出した
+    %head_space=3cm,      % 天
+    %foot_space=3cm,      % 地
+    %gutter=2cm,          % のど
+    %fore-edge=2cm,       % 小口
   ] { jlreq }
 
 % ノンブル非表示
