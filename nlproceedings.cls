@@ -32,10 +32,13 @@
   }
 
 %% クラスオプション
+\bool_new:N \g_nlpr_english_bool
+
 \clist_new:N \g__nlpr_options_clist
 \clist_new:N \g__nlpr_disallowed_options_clist
 \seq_new:N \g__nlpr_disallowed_options_seq
 
+% jlreq に渡す
 \clist_gset:Nn \g__nlpr_disallowed_options_clist
   {
     article, report, book, paper, fontsize, jafontsize, jafontscale,
@@ -49,11 +52,6 @@
   {
     \seq_gput_right:Nx \g__nlpr_disallowed_options_seq { \tl_to_str:n {#1} }
   }
-
-\keys_define:nn { nlproceedings / option }
-  {
-    unknown .code:n = \__nlpr_process_class_option:
-  }
 \cs_new:Nn \__nlpr_process_class_option:
   {
     % 2020年に変更 \l_keys_key_tl -> \l_keys_key_str
@@ -62,6 +60,14 @@
     \seq_if_in:NoTF \g__nlpr_disallowed_options_seq { \l_keys_key_str }
       { \msg_warning:nnx { nlproceedings } { disallowed-option } { \l_keys_key_str } }
       { \clist_gput_right:No \g__nlpr_options_clist { \CurrentOption } }
+  }
+
+% オプション実行
+\keys_define:nn { nlproceedings / option }
+  {
+    english .bool_gset:N = \g_nlpr_english_bool,
+    english .default:n = true,
+    unknown .code:n = \__nlpr_process_class_option:
   }
 \ProcessKeysOptions { nlproceedings / option }
 \PassOptionsToClass { \g__nlpr_options_clist } { jlreq }
@@ -112,6 +118,20 @@
   \ifvoid\jlreq@abstractbox\else\unvbox\jlreq@abstractbox\fi
 }
 \group_end:
+
+%% 英語対応
+\bool_if:NT \g_nlpr_english_bool
+  {
+    \tl_set:Nn \contentsname { Table~ of~ Contents }
+    \tl_set:Nn \refname { References }
+    \tl_set:Nn \indexname { Index }
+    \tl_set:Nn \listfigurename { List~ of~ Figures}
+    \tl_set:Nn \figurename { Figure }
+    \tl_set:Nn \listtablename { List~ of~ Tables }
+    \tl_set:Nn \tablename { Table }
+    \tl_set:cn { fnum@figure } { \figurename\nobreakspace\thefigure }
+    \tl_set:cn { fnum@table } { \tablename\nobreakspace\thetable }
+  }
 
 %% 見出し
 \ModifyHeading{section}{
